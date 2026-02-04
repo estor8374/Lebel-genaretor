@@ -2,7 +2,8 @@ const Razorpay = require("razorpay");
 
 exports.handler = async function (event) {
 
-  if (event.httpMethod !== "POST") {
+  // Allow GET + POST both
+  if (event.httpMethod !== "GET" && event.httpMethod !== "POST") {
     return {
       statusCode: 405,
       body: "Method Not Allowed"
@@ -12,14 +13,13 @@ exports.handler = async function (event) {
   try {
 
     const razorpay = new Razorpay({
-      key_id: process.env.rzp_live_SBFRjqhpikBmjf,     // Set in Netlify ENV
-      key_secret: process.env.lmcFoqSifoBUfTiM9sqbHS6Y // Set in Netlify ENV
+      key_id: process.env.RAZORPAY_KEY,
+      key_secret: process.env.RAZORPAY_SECRET
     });
 
     const options = {
-      amount: 1000, // 10 INR = 1000 paise
-      currency: "INR",
-      receipt: "order_" + Date.now()
+      amount: 1000, // ₹10
+      currency: "INR"
     };
 
     const order = await razorpay.orders.create(options);
@@ -27,20 +27,16 @@ exports.handler = async function (event) {
     return {
       statusCode: 200,
       headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json"
+        "Access-Control-Allow-Origin": "*"
       },
       body: JSON.stringify(order)
     };
 
-  } catch (err) {
+  } catch (error) {
 
     return {
       statusCode: 500,
-      body: JSON.stringify({
-        error: "Order Failed",
-        message: err.message
-      })
+      body: JSON.stringify(error)
     };
 
   }
